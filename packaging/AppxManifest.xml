@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sparse (external-location) package that gives Project Glass package identity, so Windows lets it
+     read notifications (userNotificationListener). Built and registered by scripts/install-identity.ps1. -->
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+         xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         IgnorableNamespaces="uap uap3 uap10 rescap">
+  <Identity Name="ProjectGlass.Identity" Publisher="CN=Project Glass Local" Version="1.0.0.0" ProcessorArchitecture="neutral" />
+  <Properties>
+    <DisplayName>Project Glass</DisplayName>
+    <PublisherDisplayName>Project Glass</PublisherDisplayName>
+    <Logo>assets\glass150.png</Logo>
+    <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
+  </Properties>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26200.0" />
+  </Dependencies>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
+    <uap3:Capability Name="userNotificationListener" />
+  </Capabilities>
+  <Applications>
+    <Application Id="Shell" Executable=".venv\Scripts\pythonw.exe"
+                 uap10:TrustLevel="mediumIL" uap10:RuntimeBehavior="win32App" uap10:Parameters="-m glass.shell">
+      <uap:VisualElements DisplayName="Project Glass (with notifications)"
+                          Description="Project Glass with Windows notification mirroring"
+                          BackgroundColor="transparent"
+                          Square150x150Logo="assets\glass150.png" Square44x44Logo="assets\glass44.png" />
+    </Application>
+  </Applications>
+</Package>

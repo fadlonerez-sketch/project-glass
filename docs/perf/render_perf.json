@@ -1,0 +1,57 @@
+{
+  "api": "d3d11",
+  "screen_hz": 120.00199313667719,
+  "dpr": 1.5,
+  "wallpaper": true,
+  "glass_full_intensity": {
+    "top": {
+      "frames": 586,
+      "fps": 117.2,
+      "median_ms": 8.36,
+      "p95_ms": 9.43,
+      "p99_ms": 16.56,
+      "max_ms": 17.17,
+      "missed_vsync_over_12_5ms": 14,
+      "missed_vsync_percent": 2.39
+    },
+    "dock": {
+      "frames": 576,
+      "fps": 115.2,
+      "median_ms": 8.34,
+      "p95_ms": 10.92,
+      "p99_ms": 16.98,
+      "max_ms": 17.17,
+      "missed_vsync_over_12_5ms": 24,
+      "missed_vsync_percent": 4.17
+    },
+    "process_cpu_percent_of_one_core": 28.4
+  },
+  "base_material_intensity_0": {
+    "top": {
+      "frames": 586,
+      "fps": 117.2,
+      "median_ms": 8.34,
+      "p95_ms": 9.39,
+      "p99_ms": 17.11,
+      "max_ms": 17.98,
+      "missed_vsync_over_12_5ms": 14,
+      "missed_vsync_percent": 2.39
+    },
+    "dock": {
+      "frames": 578,
+      "fps": 115.6,
+      "median_ms": 8.34,
+      "p95_ms": 9.62,
+      "p99_ms": 17.09,
+      "max_ms": 17.59,
+      "missed_vsync_over_12_5ms": 22,
+      "missed_vsync_percent": 3.81
+    },
+    "process_cpu_percent_of_one_core": 32.5
+  },
+  "gdi_region_capture": {
+    "region": "1000x230",
+    "median_ms": 8.56,
+    "p95_ms": 12.73
+  }
+}

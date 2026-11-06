@@ -1,0 +1,38 @@
+{
+  "pid": 5920,
+  "start": {
+    "cpu_s": 2.171875,
+    "handles": 1701,
+    "gdi": 48,
+    "user": 60,
+    "private_mb": 358.6,
+    "working_set_mb": 445.9
+  },
+  "idle_cpu_percent_one_core": 0.7,
+  "cycle_seconds_each": 0.532,
+  "before_cycles": {
+    "cpu_s": 2.3125,
+    "handles": 1667,
+    "gdi": 48,
+    "user": 46,
+    "private_mb": 358.2,
+    "working_set_mb": 445.7
+  },
+  "after_cycles": {
+    "cpu_s": 16.765625,
+    "handles": 1659,
+    "gdi": 48,
+    "user": 45,
+    "private_mb": 373.3,
+    "working_set_mb": 462.2
+  },
+  "cycles": 25,
+  "growth": {
+    "handles": -8,
+    "gdi": 0,
+    "user": -1,
+    "private_mb": 15.1
+  },
+  "idle_cpu_after_percent_one_core": 0.08,
+  "stderr_tracebacks": 0
+}
