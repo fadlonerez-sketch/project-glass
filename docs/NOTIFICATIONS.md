@@ -25,8 +25,8 @@ The supported way to give a desktop app identity is a **sparse package**: an MSI
 `scripts/install-identity.ps1` does it in four steps:
 
 1. downloads the Microsoft.Windows.SDK.BuildTools NuGet package (makeappx, signtool) and **refuses to use it** unless
-   its hash matches the one you pass (`-BuildToolsSha512 '<Package hash from nuget.org>'` or `-BuildToolsSha256 <hex>`)
-   and both tools carry a valid Microsoft Authenticode signature;
+   its SHA-512 matches the pinned nuget.org package hash for version 10.0.28000.2957 (for another version, pass
+   `-BuildToolsSha512 '<Package hash from nuget.org>'` or `-BuildToolsSha256 <hex>`) and both tools carry a valid Microsoft Authenticode signature;
 2. builds `ProjectGlass.Identity.msix` from `packaging/AppxManifest.xml`, pointing at the project folder, with the `userNotificationListener` capability;
 3. creates a self-signed code-signing certificate with a **non-exportable** key in CurrentUser\My, signs from the store by
    thumbprint (no PFX file, no password), and trusts the public certificate in **CurrentUser\TrustedPeople**, which
