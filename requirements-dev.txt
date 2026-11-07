@@ -1,0 +1,5 @@
+# Development and test tools (versions verified with Python 3.14.5 on Windows 11).
+# Install the runtime first: pip install -r requirements.txt -r requirements-dev.txt
+pytest>=9.1.1
+pytest-qt>=4.5.0
+ruff>=0.17.4

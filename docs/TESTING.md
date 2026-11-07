@@ -16,6 +16,18 @@ displays (2560×1440 at 144 Hz, 100%; 2560×1600 at 120 Hz, 150%).
 
 Quick run without the render tests: `pytest -m "not slow"`.
 
+### Off-screen subset (CI)
+
+`.github/workflows/ci.yml` runs `ruff check .` and the tests that need no visible window, no real shell process and no
+live UI Automation targets, with `QT_QPA_PLATFORM=offscreen`:
+
+```bat
+pip install -r requirements.txt -r requirements-dev.txt
+pytest tests/core tests/shell tests/automation/test_units.py tests/automation/test_server.py -m "not slow" --ignore tests/shell/test_shell_process.py --ignore tests/shell/test_dock_qml.py
+```
+
+On 2026-11-07 (Python 3.14.5, PySide6 6.11.2) this gave **305 passed, 2 deselected** locally.
+
 ### What the new tests cover
 
 | Area | Tests |
