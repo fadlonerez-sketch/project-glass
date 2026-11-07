@@ -5,11 +5,10 @@ import argparse
 import ctypes
 import logging
 import logging.handlers
-import os
 import sys
 
 from PySide6.QtCore import Qt, QTimer, QUrl
-from PySide6.QtGui import QFont, QGuiApplication, QIcon
+from PySide6.QtGui import QFont, QGuiApplication
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface

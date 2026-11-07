@@ -10,18 +10,17 @@ import logging.handlers
 import os
 import subprocess
 import sys
-import threading
 import time
 from ctypes import wintypes
 from pathlib import Path
 
-from PySide6.QtCore import QAbstractNativeEventFilter, QObject, QTimer, QUrl, Qt, Signal, Slot
+from PySide6.QtCore import QAbstractNativeEventFilter, QObject, QTimer, QUrl, Qt, Signal
 from PySide6.QtGui import QGuiApplication, QFont, QScreen
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
 
 from glass import __version__
-from glass.core import ipc, paths, security
+from glass.core import paths, security
 from glass.core.apps import AppRegistry
 from glass.core.ipc import ErrorCode, ProtocolError
 from glass.core.settings import SettingsStore

@@ -506,7 +506,8 @@ class ControlCenterBridge(QObject):
 
     @Slot()
     def startGlass(self) -> None:
-        import subprocess, sys
+        import subprocess
+        import sys
         from pathlib import Path
         exe = Path(sys.executable)
         pyw = exe.parent / "pythonw.exe"
@@ -516,7 +517,8 @@ class ControlCenterBridge(QObject):
 
     @Slot()
     def restoreWindows(self) -> None:
-        import subprocess, sys
+        import subprocess
+        import sys
         subprocess.Popen([sys.executable, "-m", "glass.recovery", "--restore"], cwd=str(paths.PROJECT_DIR),
                          creationflags=subprocess.CREATE_NO_WINDOW)
         self.message.emit("Restoring the Windows desktop…")

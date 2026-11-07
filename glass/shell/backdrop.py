@@ -11,7 +11,7 @@ import logging
 import os
 from pathlib import Path
 
-from PySide6.QtCore import QRect, QRectF, Qt
+from PySide6.QtCore import QRectF
 from PySide6.QtGui import QColor, QImage, QPainter
 
 from glass.win import shellcom

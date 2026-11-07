@@ -166,7 +166,6 @@ def test_presets_are_complete_and_distinct():
     keys = set(next(iter(material.PRESETS.values())))
     for name, preset in material.PRESETS.items():
         assert set(preset) == keys, name
-        res = SettingsStore.__new__(SettingsStore)  # validate through the specs without a database
         for k, v in preset.items():
             assert SPECS[k].coerce(k, v) == v
         assert material.matching_preset({**defaults(), **preset}) == name

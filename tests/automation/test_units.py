@@ -1,7 +1,6 @@
 """Unit tests that need no engine process: framing, store, key parsing, policy, ref parsing."""
 from __future__ import annotations
 
-import json
 import os
 import struct
 

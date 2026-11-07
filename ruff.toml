@@ -1,0 +1,8 @@
+# Lint: pyflakes-level checks plus syntax/statement errors. Style rules are left to the author.
+target-version = "py311"
+line-length = 120
+
+[lint]
+select = ["E4", "E7", "E9", "F"]
+# compact one-line statements, short lambdas and l/I names are a deliberate style here
+ignore = ["E702", "E731", "E741"]

@@ -5,7 +5,6 @@ clicked or focused in the user's session; semantic UIA actions are real.
 """
 from __future__ import annotations
 
-import os
 import struct
 
 import pytest

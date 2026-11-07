@@ -8,7 +8,6 @@ from __future__ import annotations
 import concurrent.futures
 import itertools
 import logging
-import threading
 import time
 
 from PySide6.QtCore import QObject, QTimer, Signal, Slot

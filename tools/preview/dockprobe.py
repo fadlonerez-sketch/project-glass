@@ -39,7 +39,7 @@ from glass.win.icons import AppIconProvider  # noqa: E402
 def main() -> int:
     QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.Direct3D11)
     QQuickWindow.setDefaultAlphaBuffer(True)
-    app = QGuiApplication(sys.argv)
+    app = QGuiApplication(sys.argv)  # noqa: F841 - keep the application alive
     settings = SettingsStore(paths.settings_db())
     settings.patch({"dock.position": args.position,
                     "dock.widgets": [{"id": "weather", "type": "weather"}, {"id": "calendar", "type": "calendar"},
@@ -104,7 +104,7 @@ def main() -> int:
     win.setProperty("magAmount", 0.0); win.setProperty("pointer", -1)
 
     # previews and tooltips for every app; placement and region
-    preview, tip = find("WindowPreview"), None
+    preview = find("WindowPreview")
     placements = {}
     for uid in apps:
         running = result["rest"][uid]["kind"] == "app" and uid.split(":", 1)[1] in ("Google Chrome", "File Explorer", "WhatsApp", "Terminal")

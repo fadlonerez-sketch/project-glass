@@ -119,7 +119,6 @@ def test_theme_tokens_follow_settings_and_publish_theme_json(glass, isolated_dat
 @pytest.fixture
 def server(qapp):
     token = security.new_token()
-    calls = []
     srv = ShellServer({"echo": lambda p: {"echo": p}, "boom": lambda p: 1 / 0},
                       {"slow": lambda p: (time.sleep(0.1), {"slow": True})[1]}, token_reader=lambda: token)
     assert srv.listen()

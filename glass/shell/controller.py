@@ -5,10 +5,9 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import Any
 
 from PySide6.QtCore import Property, QObject, QRect, QTimer, Signal, Slot
-from PySide6.QtGui import QCursor, QGuiApplication, QRegion, QWindow
+from PySide6.QtGui import QCursor, QRegion, QWindow
 
 from glass.core import launchdeck, material, paths, theme
 from glass.core.settings import SettingsStore

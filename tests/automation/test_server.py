@@ -125,7 +125,7 @@ def test_malformed_client_info_is_rejected(app, srv, monkeypatch, bad):
 
 
 def test_local_client_info_is_recorded(app, srv):
-    c = Conn(app, srv.name)
+    c = Conn(app, srv.name)  # noqa: F841 - keep the connection open
     assert pump(app, lambda: len(srv.sessions) == 1)
     info = next(iter(srv.sessions.values())).info
     assert info["pid"] == os.getpid() and info["remote"] is False and info["image"].lower().endswith(".exe")

@@ -40,7 +40,7 @@ def main() -> int:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.Direct3D11)
-    app = QGuiApplication(sys.argv)
+    app = QGuiApplication(sys.argv)  # noqa: F841 - keep the application alive
     bridge = ControlCenterBridge()
     bridge._retheme_local()  # no Shell / engine connections in preview mode
     bridge._apps = [{"app_id": "a", "name": "Google Chrome", "pinned": True, "running": True, "last_launched": 0},
