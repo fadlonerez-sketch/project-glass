@@ -1,126 +1,128 @@
 # Project Glass
 
-An Apple-inspired desktop experience for Windows:
-- a **Dynamic Glass** top bar with market tickers either side;
-- a thin, full-width **Dock** with live window previews;
-- a standalone **Control Center**;
-- a configurable **Liquid Glass** material (Crystal Glass by default);
-- a master **power switch**;
-- a semantic computer-control engine that lets **Garvis** operate the computer through UI Automation, never
-  screenshots.
+An Apple-inspired desktop layer for Windows, built in Python and Qt Quick, with a UI Automation engine that lets an AI
+assistant operate apps semantically instead of through screenshots.
 
-Windows stays underneath and Explorer keeps running. Everything Glass changes is reversible.
+![The Dock with a window preview open, Liquid Glass "Crystal" material, dark theme](docs/preview/dock-preview-dark-i100.png)
 
-Built with Python 3.11+ and PySide6 **Qt Quick/QML** (GPU scene graph, Direct3D 11, custom shaders). It runs
-with Smart App Control enabled: no unsigned native binaries are involved.
+<p>
+  <img src="docs/preview/pill-media-expanded-dark-i100.png" width="560" alt="Dynamic Glass: the expanded media player between the market tickers">
+  <img src="docs/preview/controlcenter/cc-glass-dark.png" width="400" alt="Control Center: Liquid Glass presets (Subtle, Liquid, Crystal)">
+</p>
 
-## Install
+*Off-screen renders of the real QML (`tools/preview/render.py`, `tools/preview/render_cc.py`) on a fixed 1920×1080
+virtual display with demo data. Live window thumbnails can't appear in off-screen captures, so the preview shows its
+fallback cards.*
+
+## Why it exists
+
+Windows' shell can't be restyled, and desktop automation for AI agents usually means screenshots, OCR and blind
+clicks. Project Glass addresses both. It is a reversible shell that sits on top of Explorer (never replacing it), and
+a separate engine that exposes windows and controls through Windows UI Automation over an authenticated local pipe.
+
+Garvis is the author's private desktop AI assistant. Project Glass exposes its UI-automation tools to Garvis as
+`glass_*` tools, with per-client scopes, a deny list, an audit log and an emergency stop.
+
+## Features
+
+- **Dynamic Glass top bar:** a pill that shows music, notifications, volume/power/network pulses and automation
+  activity; market tickers either side; Wi-Fi, sound, battery and clock flyouts.
+- **Dock:** a thin full-width bar with live DWM window previews, pinned/open/recent apps, widgets (weather, calendar,
+  clock, system load), magnification that never shifts layout, and full keyboard navigation.
+- **Liquid Glass material:** a custom GPU shader (refraction of the real wallpaper, dispersion, Fresnel, adaptive
+  readability) with Subtle / Liquid / **Crystal** (default) presets and every parameter adjustable.
+- **Control Center:** theme and accent, material, Dock, markets, notifications, startup, recovery and automation
+  permissions.
+- **Always reversible:** a master power switch, and a watchdog that owns a recovery hotkey, restores the taskbar if
+  the shell crashes and stops restarting after repeated failures.
+- **Automation engine:** list/inspect windows, find elements, invoke, enter text, window operations and change
+  events, with no screenshot or OCR fallback. See [docs/PROTOCOL.md](docs/PROTOCOL.md).
+
+## Tech stack
+
+Python · PySide6 (Qt Quick/QML on Direct3D 11, custom GLSL shader compiled to `.qsb`) · Windows UI Automation via
+`comtypes` · WinRT bindings (media, power, network, notifications) · named pipes with DPAPI-protected tokens ·
+SQLite settings store · pytest + pytest-qt.
+
+## Requirements
+
+- Windows 10 2004+ or Windows 11
+- Python 3.11+ (developed and tested on 3.14)
+- No administrator rights. It runs with Smart App Control on: no unsigned native binaries are involved.
+
+## Install and run
 
 ```bat
-py -3 scripts\install.py            :: per-user; no administrator rights
-py -3 scripts\install.py --startup  :: also start Glass at sign-in (or toggle it in Control Center › System)
+py -3 scripts\install.py            :: per-user install, no administrator rights
+py -3 scripts\install.py --startup  :: also start Glass at sign-in
 ```
 
-The installer:
-- creates `.venv` (system site-packages, so the already-installed PySide6 is reused);
-- installs the WinRT bindings from `requirements.txt`;
-- registers the package;
-- compiles the shader;
-- adds **Start › Project Glass** with three entries: *Project Glass*, *Glass Control Center* and *Restore Windows Desktop*.
+The installer creates `.venv` (reusing the system PySide6), installs `requirements.txt`, compiles the shader and adds
+**Start › Project Glass** with *Project Glass*, *Glass Control Center* and *Restore Windows Desktop*.
 
-Start: Start › Project Glass, or `.venv\Scripts\pythonw.exe -m glass.shell`.
-Uninstall: `py -3 scripts\install.py --uninstall` keeps your data in `%LOCALAPPDATA%\ProjectGlass`.
+Run it from the Start menu, or with `.venv\Scripts\pythonw.exe -m glass.shell`.
+Uninstall with `py -3 scripts\install.py --uninstall` (your settings in `%LOCALAPPDATA%\ProjectGlass` are kept).
 
-**LaunchDeck:** restart it once after installing Glass (tray › Exit, then start it again) so it picks up the
-new *open search* message and the shared appearance.
+**Getting the normal desktop back:** press **Ctrl+Alt+Shift+R** at any time. It is handled by the watchdog, so it
+works even if the shell hangs. **Ctrl+Alt+Shift+G** toggles Glass off and on. Everything else is in
+[docs/USAGE.md](docs/USAGE.md).
 
-## Power: on and off
+## Run the tests
 
-Glass has a master switch. **Off** puts Windows back exactly as normal:
-- every Glass surface closes;
-- the reserved screen space is released;
-- the taskbar returns;
-- background work pauses.
+```bat
+.venv\Scripts\python -m pip install -r requirements-dev.txt
+set QT_QPA_PLATFORM=offscreen
+.venv\Scripts\python -m pytest tests/core tests/shell tests/automation/test_units.py tests/automation/test_server.py -m "not slow" --ignore tests/shell/test_shell_process.py --ignore tests/shell/test_dock_qml.py
+.venv\Scripts\python -m ruff check .
+```
 
-Settings are kept, and recovery stays armed. **On** brings back the whole configured experience. The switch always
-shows Glass's real state.
+Result on 2026-11-07 (Windows 11, Python 3.14.5, PySide6 6.11.2): **305 passed, 2 deselected**. This is the
+off-screen set that CI runs: no window appears and no input is sent.
 
-| To switch Glass off | To switch it back on |
-|---|---|
-| Power button in the top bar, or **Turn Glass off** in the quick controls (click the Dynamic Glass) | **Start › Project Glass** |
-| The Glass menu (the mark at the top left) | The switch at the top of **Control Center** |
-| The switch at the top of **Control Center** | **Ctrl+Alt+Shift+G** |
-| **Ctrl+Alt+Shift+G** | |
+The remaining suites start a real shell process, render the Dock QML in a subprocess, or drive off-screen test
+windows through the live UI Automation engine; see [docs/TESTING.md](docs/TESTING.md).
 
-## Recovery: the Windows desktop is always one step away
+## Project structure
 
-| | |
-|---|---|
-| **Ctrl+Alt+Shift+R** | Owned by the watchdog process, so it works even if the Shell hangs. Restores the Windows taskbar and quits Glass. |
-| Start › Project Glass › **Restore Windows Desktop** | Same, from the Start menu. |
-| **Automatic** | If the Shell crashes, the watchdog restores the taskbar immediately and restarts Glass (at most 3 times in 10 minutes, then it stays on the standard desktop). |
-| Manual | `.venv\Scripts\python -m glass.recovery --restore` |
+```
+glass/
+  shell/          the shell process: Dynamic Glass, Dock, markets, local Shell API
+  controlcenter/  the Control Center app
+  automation/     UI Automation engine + authenticated pipe server for Garvis
+  core/           settings, theme, material, IPC, security, markets, weather (mostly pure, unit-tested)
+  recovery/       watchdog and taskbar restore
+  win/            Win32/WinRT integrations: AppBars, DWM thumbnails, windows, media, audio, notifications
+  ui/             QML (top bar, flyouts, Dock, Control Center) and the Liquid Glass shader
+scripts/          per-user installer, optional package-identity script
+tools/            off-screen preview renderers, perf soak, test target windows
+docs/             architecture, protocol, material, testing, limitations, usage
+```
 
-Before Glass touches the taskbar, it records your original taskbar setting in
-`%LOCALAPPDATA%\ProjectGlass\recovery-state.json`. That file is what every restore path uses.
+## Known limitations
 
-## Using it
+- **Market data uses Yahoo Finance's unofficial chart endpoint.** It is undocumented, has no published terms for
+  apps, can change without notice, and quotes may be delayed; every ticker shows a freshness label (Live, Delayed,
+  Closed or Not updated since).
+- Floating panels (player, flyouts, previews) refract the wallpaper layer, not the window beneath them.
+- DWM window thumbnails are drawn above Glass's content, so they can't have rounded corners; minimised windows show
+  a fallback card.
+- Mirroring other apps' Windows notifications requires package identity (`scripts/install-identity.ps1`), which is
+  untested.
+- Pointer feel, live DWM thumbnails and on-screen frame pacing have not been verified by automated tests; those tests
+  never put windows on the desktop or inject input.
 
-### Top bar
-| Area | What it does |
-|---|---|
-| Glass mark (left) | Menu: Control Center, search, show the Windows tray, turn Glass off, restore the desktop. |
-| Active app name | Shows the app in front. |
-| **Dynamic Glass** (centre of the active display) | When music plays, the pill shows it compactly. **Rest the pointer** on it to expand the player, which stays attached to the pill. It reacts at once and opens after a 100 ms hover-intent delay, and it never opens by itself when music starts. **Click** opens the quick controls (Wi-Fi, Bluetooth, appearance, Garvis, the sliders, the power button). Neither takes keyboard focus or changes the active app. |
-| **Markets** (either side of the pill) | Indices on the left, your watchlist on the right: price, daily change and a mini chart. A status always says how fresh the numbers are: Live, Delayed, Closed or Not updated since. Hover a ticker for details; click it to open the quote. |
-| Dynamic Glass, other states | Notifications, volume/power/network pulses, and "Garvis is using …" with a **Stop** button. |
-| Status area (right) | Tray access, network (Wi-Fi list, connect, toggle), sound, battery (health and power draw), clock (calendar and notification history). Each opens a flyout. Anything Windows has no supported API for opens the matching Settings page. |
-
-### Dock
-- **Layout:** a thin glass bar across the display:
-  `widgets │ Search · Open apps | Recently Used │ widgets`.
-  - The apps are centred.
-  - Widgets sit at the two ends, in their configured order.
-  - Nothing moves when you hover: icons swell under the pointer as a pure visual effect.
-- **Pinned apps** follow the same Open/Recent rules, keep the order you set, and never drop out.
-- **Window previews:** rest the pointer on an open app to see its windows, as live thumbnails drawn by Windows.
-  - Click one to bring it forward.
-  - The minimise/restore and close buttons appear on hover; close asks for a second click.
-  - You can move freely from the icon to the preview, and from one app to the next.
-  - Closed apps show their name instead.
-- **Mouse:**
-  - click: focus the app, or launch it;
-  - click the focused app's only window: minimise it;
-  - right-click: menu (windows, new window, keep in Dock, remove, quit);
-  - middle-click: new instance;
-  - drag pinned icons: reorder within their section;
-  - drag one up and out: remove it.
-- **Keyboard:** **Ctrl+Alt+Shift+D** moves focus to the Dock.
-  - Arrows choose an item. **Up** (or Space) shows its windows; Left/Right pick one.
-  - **Enter** opens it. **Shift+F10** opens the menu. **Esc** gives focus back.
-- **Widgets**: Weather (Open-Meteo, city and units in Control Center › Dock), Calendar, Clock, System load, Garvis.
-- **Virtual desktops**: shows the current desktop's apps by default. Garvis's automation desktop is never shown.
-
-### Control Center
-Power switch · Appearance (theme, full colour picker with HEX/RGB, saved colours, Apply/Reset) ·
-Liquid Glass (Subtle / Liquid / Crystal presets with live previews, accent tint, every parameter) ·
-Top Bar & Dynamic Glass · Dock (previews, apps, widgets, weather) · Markets (watchlist, indices, refresh) ·
-Notifications · Applications (LaunchDeck) ·
-System (startup, taskbar, recovery, display/battery/network/sound) · Garvis (permissions, deny list,
-activity log, emergency stop) · About.
-
-## Garvis
-
-Enable it with `GARVIS_GLASS_ENABLED=true` in Garvis's `.env`, then restart Garvis.
-
-Garvis then gets `glass_*` tools (list/inspect windows, find elements, act, enter text, keys, window ops, wait,
-changes). These replace its legacy screen, mouse, keyboard, OCR and UIA tools. There is **no screenshot or OCR fallback**: if Glass isn't running,
-the tools say so. Emergency stop: **Ctrl+Alt+Shift+Q**, the Stop button in the Dynamic Glass, or Control Center › Garvis.
+Full list: [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 
 ## Documents
+
+- [docs/USAGE.md](docs/USAGE.md): power switch, recovery, top bar, Dock, Control Center, Garvis tools.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): processes, data, IPC, security.
 - [docs/PROTOCOL.md](docs/PROTOCOL.md): the computer-control protocol.
 - [docs/LIQUID_GLASS.md](docs/LIQUID_GLASS.md): the material, refraction and performance measurements.
 - [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md): mirroring Windows notifications (package identity).
 - [docs/TESTING.md](docs/TESTING.md): test suites and results.
-- [docs/LIMITATIONS.md](docs/LIMITATIONS.md): what is and isn't done, honestly.
+- [docs/LIMITATIONS.md](docs/LIMITATIONS.md): what is and isn't done.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
