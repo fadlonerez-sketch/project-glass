@@ -210,3 +210,66 @@ def test_island_screen_and_power_state(glass):
     g.set_powered(True, busy=True)
     g.set_powered(False)
     assert states == [(True, True), (False, False)] and g.powered is False
+
+
+# ------------------------------------------------------------------ Shell API: local-only, fail closed
+
+def _raw_connect(name):
+    from PySide6.QtNetwork import QLocalSocket
+    sock = QLocalSocket()
+    sock.connectToServer(name)
+    assert sock.waitForConnected(2000)
+    return sock
+
+
+def _settle(srv, sock, refused, timeout=2.0):
+    from PySide6.QtNetwork import QLocalSocket
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        pump(20)
+        if refused and sock.state() == QLocalSocket.LocalSocketState.UnconnectedState:
+            return
+        if not refused and srv._clients:
+            return
+
+
+def test_server_refuses_remote_client(server, monkeypatch):
+    from PySide6.QtNetwork import QLocalSocket
+    srv, _ = server
+    monkeypatch.setattr(security, "pipe_client_info",
+                        lambda h: {"pid": 1, "image": "x", "remote": True, "computer": "EVIL"})
+    sock = _raw_connect(srv.name)
+    _settle(srv, sock, refused=True)
+    assert sock.state() == QLocalSocket.LocalSocketState.UnconnectedState
+    assert srv._clients == []
+
+
+def test_server_refuses_client_it_cannot_identify(server, monkeypatch):
+    from PySide6.QtNetwork import QLocalSocket
+    srv, _ = server
+
+    def boom(h):
+        raise OSError("lookup failed")
+    monkeypatch.setattr(security, "pipe_client_info", boom)
+    sock = _raw_connect(srv.name)
+    _settle(srv, sock, refused=True)
+    assert sock.state() == QLocalSocket.LocalSocketState.UnconnectedState
+    assert srv._clients == []
+
+
+@pytest.mark.parametrize("bad", [None, {}, {"pid": 1, "remote": "no"}])
+def test_server_refuses_malformed_client_info(server, monkeypatch, bad):
+    from PySide6.QtNetwork import QLocalSocket
+    srv, _ = server
+    monkeypatch.setattr(security, "pipe_client_info", lambda h: bad)
+    sock = _raw_connect(srv.name)
+    _settle(srv, sock, refused=True)
+    assert sock.state() == QLocalSocket.LocalSocketState.UnconnectedState
+    assert srv._clients == []
+
+
+def test_server_accepts_local_client(server):
+    srv, _ = server            # the real lookup: this test process is a local client
+    sock = _raw_connect(srv.name)
+    _settle(srv, sock, refused=False)
+    assert len(srv._clients) == 1

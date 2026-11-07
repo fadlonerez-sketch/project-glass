@@ -94,12 +94,10 @@ class AutomationServer(QObject):
     def _on_connection(self) -> None:
         while self.server.hasPendingConnections():
             sock = self.server.nextPendingConnection()
-            try:
-                info = security.pipe_client_info(int(sock.socketDescriptor()))
-            except Exception as exc:  # pragma: no cover - defensive
-                info = {"pid": 0, "image": "", "remote": False, "error": str(exc)}
-            if info.get("remote"):
-                log.warning("rejected remote pipe client from %s", info.get("computer"))
+            # Fail closed: a remote client, or one that cannot be identified, is refused.
+            info = security.local_pipe_client(sock.socketDescriptor())
+            if info is None:
+                log.warning("rejected pipe client")
                 sock.abort()
                 sock.deleteLater()
                 continue

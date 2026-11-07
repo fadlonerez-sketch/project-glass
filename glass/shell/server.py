@@ -70,14 +70,12 @@ class ShellServer(QObject):
     def _on_connection(self) -> None:
         while self._server.hasPendingConnections():
             sock = self._server.nextPendingConnection()
-            try:
-                info = security.pipe_client_info(int(sock.socketDescriptor()))
-                if info.get("remote"):
-                    log.warning("refused remote Shell API client from %s", info.get("computer"))
-                    sock.abort()
-                    continue
-            except Exception:
-                pass
+            # Fail closed: a remote client, or one that cannot be identified, is refused.
+            if security.local_pipe_client(sock.socketDescriptor()) is None:
+                log.warning("refused Shell API client")
+                sock.abort()
+                sock.deleteLater()
+                continue
             client = _Client(sock)
             self._clients.append(client)
             sock.readyRead.connect(lambda c=client: self._on_ready(c))

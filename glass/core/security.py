@@ -15,6 +15,7 @@ import ctypes
 import hashlib
 import os
 import hmac
+import logging
 import secrets
 import sys
 from ctypes import wintypes
@@ -23,6 +24,7 @@ from pathlib import Path
 from glass.core import paths
 
 _ENTROPY = b"ProjectGlass.v1"
+log = logging.getLogger(__name__)
 
 
 # --------------------------------------------------------------------------------------------- SID
@@ -145,17 +147,49 @@ def read_secret(name: str, directory: Path | None = None) -> str | None:
 
 # --------------------------------------------------------------------------------------------- pipe clients
 
+ERROR_PIPE_LOCAL = 229
+
+
 def pipe_client_info(handle: int) -> dict:
-    """Process id, image path and locality of the client connected to a server pipe handle."""
+    """Process id, image path and locality of the client connected to a server pipe handle.
+
+    Raises OSError when the client cannot be identified (for example an invalid handle): a failed
+    lookup must never be mistaken for a local client.
+    """
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
     kernel32.GetNamedPipeClientProcessId.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.ULONG)]
     kernel32.GetNamedPipeClientComputerNameW.argtypes = [wintypes.HANDLE, wintypes.LPWSTR, wintypes.ULONG]
     pid = wintypes.ULONG()
-    kernel32.GetNamedPipeClientProcessId(wintypes.HANDLE(handle), ctypes.byref(pid))
+    if not kernel32.GetNamedPipeClientProcessId(wintypes.HANDLE(handle), ctypes.byref(pid)):
+        raise ctypes.WinError(ctypes.get_last_error())
     name = ctypes.create_unicode_buffer(256)
     remote = bool(kernel32.GetNamedPipeClientComputerNameW(wintypes.HANDLE(handle), name, ctypes.sizeof(name)))
+    if not remote:
+        err = ctypes.get_last_error()
+        if err != ERROR_PIPE_LOCAL:      # only "the client is local" counts as local; any other failure is unknown
+            raise ctypes.WinError(err)
     return {"pid": pid.value, "image": process_image(pid.value), "remote": remote,
             "computer": name.value if remote else ""}
+
+
+def local_pipe_client(handle: int) -> dict | None:
+    """Identify a pipe client for a server that serves only local clients.
+
+    Returns the client info, or None when the connection must be refused. Fails closed: a remote client,
+    an error while identifying the client, or an answer of an unexpected shape all mean "refuse".
+    """
+    try:
+        info = pipe_client_info(int(handle))
+    except Exception as exc:  # noqa: BLE001 - any failure to identify the caller refuses it
+        log.warning("refused pipe client: could not identify it (%s)", exc)
+        return None
+    if not isinstance(info, dict) or not isinstance(info.get("remote"), bool):
+        log.warning("refused pipe client: unexpected client info %r", info)
+        return None
+    if info["remote"]:
+        log.warning("refused remote pipe client from %s", info.get("computer"))
+        return None
+    return info
 
 
 def process_image(pid: int) -> str:

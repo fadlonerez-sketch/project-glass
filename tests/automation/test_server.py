@@ -107,6 +107,23 @@ def test_remote_clients_are_rejected(app, srv, monkeypatch):
     assert srv.sessions == {}
 
 
+def test_unidentifiable_clients_are_rejected(app, srv, monkeypatch):
+    def boom(h):
+        raise OSError("lookup failed")
+    monkeypatch.setattr(server_mod.security, "pipe_client_info", boom)
+    c = Conn(app, srv.name)
+    assert pump(app, lambda: c.sock.state() == QLocalSocket.LocalSocketState.UnconnectedState)
+    assert srv.sessions == {}
+
+
+@pytest.mark.parametrize("bad", [None, {}, {"pid": 1, "remote": "no"}])
+def test_malformed_client_info_is_rejected(app, srv, monkeypatch, bad):
+    monkeypatch.setattr(server_mod.security, "pipe_client_info", lambda h: bad)
+    c = Conn(app, srv.name)
+    assert pump(app, lambda: c.sock.state() == QLocalSocket.LocalSocketState.UnconnectedState)
+    assert srv.sessions == {}
+
+
 def test_local_client_info_is_recorded(app, srv):
     c = Conn(app, srv.name)
     assert pump(app, lambda: len(srv.sessions) == 1)
